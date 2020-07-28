@@ -10,12 +10,12 @@
 #import <GLKit/GLKit.h>
 
 typedef struct {
-    GLKVector3  positionCoord;
-    GLKVector2  textureCoord;
-    GLKVector3  normal;
+    GLKVector3  positionCoord;  //顶点坐标
+    GLKVector2  textureCoord;   //纹理坐标
+    GLKVector3  normal;         //法线
 } LVertex;
 
-static NSInteger const kCoordCount = 36;
+static NSInteger const kCoordCount = 36;    //总顶点数
 
 @interface ViewController ()<GLKViewDelegate>
 
@@ -56,13 +56,19 @@ static NSInteger const kCoordCount = 36;
     self.view.backgroundColor = [UIColor redColor];
     
     //2. OpenGL ES 相关初始化
-    [self commonInit];
+    [self setupConfig];
     
-    //3. 添加CADisplayLink
+    //3. 顶点数据
+    [self setupVertexs];
+    
+    //4. 设置纹理数据
+    [self setupTexture];
+    
+    //5. 添加CADisplayLink
     [self addDisplayLinkTimer];
 }
 
-- (void)commonInit
+- (void)setupConfig
 {
     //1. 创建上下文
     EAGLContext *context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
@@ -83,16 +89,19 @@ static NSInteger const kCoordCount = 36;
     
     //5. 将 GLKView 添加 self.view 上
     [self.view addSubview:self.glkView];
-    
-    //6. 获取纹理图片路径
+}
+
+- (void)setupTexture
+{
+    //1. 获取纹理图片路径
     NSString *imageFilePath = [[NSBundle mainBundle] pathForResource:@"timg" ofType:@"png"];
     UIImage *image = [UIImage imageWithContentsOfFile:imageFilePath];
     
-    //7. 设置纹理参数
+    //2. 设置纹理参数
     NSDictionary *options = @{GLKTextureLoaderOriginBottomLeft:@(1)};
     GLKTextureInfo *textInfo = [GLKTextureLoader textureWithCGImage:[image CGImage] options:options error:nil];
     
-    //8. 使用 baseEffect
+    //3. 使用 baseEffect
     self.baseEffect = [[GLKBaseEffect alloc] init];
     self.baseEffect.texture2d0.name = textInfo.name;
     self.baseEffect.texture2d0.target = textInfo.target;
@@ -103,7 +112,10 @@ static NSInteger const kCoordCount = 36;
     self.baseEffect.light0.diffuseColor = GLKVector4Make(1, 1, 1, 1);
     //光源位置
     self.baseEffect.light0.position = GLKVector4Make(-0.5, -0.5, 5, 1);
-    
+}
+
+- (void)setupVertexs
+{
     /**
      这里我们不复用顶点，使用每 3 个点画一个三角形的方式，需要 12 个三角形，则需要 36 个顶点,以下的数据用来绘制以（0，0，0）为中心，边长为 1 的立方体
      */
